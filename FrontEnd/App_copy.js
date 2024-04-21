@@ -148,7 +148,7 @@ function populateTasks(employeeId) {
       });
     } else {
       // If the employee is a mentee list their tasks
-      fetch(`http://localhost:8080/peercodingtasks/${employeeId}`)
+      fetch(`http://localhost:8080/peercodingtasks/by-assignee/${employeeId}`)
       .then(response => response.json())
       .then(tasks => {
         console.log('Tasks:', tasks);
