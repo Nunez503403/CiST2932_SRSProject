@@ -88,52 +88,6 @@ function attachEventListeners() {
   }
 }
 
-// // handleNewEmployeeSubmit(event)
-// // Handles the submission of the 'New Employee' form.
-// // Prevents default form submission, collects form data, and calls createEmployee.
-// function handleNewEmployeeSubmit(event) {
-//   event.preventDefault();
-//   console.log("Form submit triggered");
-
-//   const formData = {
-//       name: document.getElementById('newEmployeeName').value,
-//       email: document.getElementById('newEmployeeEmail').value,
-//       isMentor: document.getElementById('newEmployeeIsMentor').checked,
-//       username: document.getElementById('newEmployeeUsername').value,
-//       password: document.getElementById('newEmployeePassword').value,
-//       employmentType: document.getElementById('newEmployeeEmploymentType').value,
-//       mentor: document.getElementById('newMentorAssignments').value,
-//       mentee: document.getElementById('newMenteeAssignments').value
-//   };
-
-//   console.log("Form Data:", formData);
-//   createEmployee(formData);  // Ensure this function logs and functions correctly
-// }
-// // handleEditEmployeeSubmit(event)
-// // Manages form submission for editing an employee's details.
-// // Gathers updated data from the form and invokes updateEmployee.
-// function handleEditEmployeeSubmit(event) {
-//   event.preventDefault();
-//   console.log("Edit form submission triggered");
-
-//   // Collect form data
-//   const formData = {
-//     employeeId: document.getElementById('editEmployeeId').value,
-//     name: document.getElementById('editName').value,
-//     email: document.getElementById('editEmail').value, // Assuming you have added an email field
-//     isMentor: document.getElementById('editIsMentor').checked,
-//     username: document.getElementById('editUsername').value, // Assuming you have added a username field
-//     password: document.getElementById('editPassword').value, // Assuming you have added a password field
-//     employmentType: document.getElementById('editEmploymentType').value,
-//     mentor: document.getElementById('editMentorAssignments').value, // Assuming you have a mentor assignment dropdown
-//     mentee: document.getElementById('editMenteeAssignments').value // Assuming you have a mentee assignment dropdown
-//   };
-
-//   console.log("Updated employee data:", formData);
-//   updateEmployee(formData.employeeId, formData);
-// }
-
-// Function to handle form submission for both creating and updating employees
 function handleSubmitEmployee(event) {
   event.preventDefault();
   const formId = event.target.id; // Get the ID of the form to determine if it's 'addEmployeeForm' or 'editEmployeeForm'
