@@ -211,6 +211,8 @@ function handleTableClick(event) {
 function fetchAllEmployees() {
   console.log("Fetching all employees...");
   fetch('http://localhost:8080/newhireinfo')
+  console.log("Fetching all employees...");
+  fetch('http://localhost:8080/newhireinfo')
       .then(response => response.json())
       .then(employees => {
           const employeeTableBody = document.getElementById('employeeData');
@@ -263,11 +265,19 @@ function createEmployee(employeeData) {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json'
+          'Content-Type': 'application/json'
       },
       body: JSON.stringify(employeeData)
   })
   .then(response => {
+      body: JSON.stringify(employeeData)
+  })
+  .then(response => {
       if (response.ok) {
+          onsole.log("Employee created successfully with ID:", data.employeeId);
+          fetchAllEmployees(); // Refresh the employee list
+          document.getElementById('newEmployeeForm').reset(); // Reset the form
+          $('#newEmployeeModal').modal('hide'); // Close the modal
           onsole.log("Employee created successfully with ID:", data.employeeId);
           fetchAllEmployees(); // Refresh the employee list
           document.getElementById('newEmployeeForm').reset(); // Reset the form
@@ -277,7 +287,18 @@ function createEmployee(employeeData) {
               console.log('Failed to create employee:', data.message);
               alert('Failed to create employee: ' + data.message);
           });
+          response.json().then(data => {
+              console.log('Failed to create employee:', data.message);
+              alert('Failed to create employee: ' + data.message);
+          });
       }
+  })
+  .catch(error => console.error('Error creating employee:', error));
+}
+
+// viewEmployee(employeeId)
+// Fetches detailed information about a specific employee for viewing.
+// Displays employee details in a modal or dedicated view section.
   })
   .catch(error => console.error('Error creating employee:', error));
 }
@@ -295,7 +316,17 @@ function viewEmployee(employeeId) {
           document.getElementById('viewName').textContent = employee.name;
           document.getElementById('viewIsMentor').textContent = employee.isMentor;
           document.getElementById('viewEmploymentType').textContent = employee.employmentType;
+      .then(response => response.json())
+      .then(employee => {
+          // Populate the view modal with the employee's details
+          document.getElementById('viewEmployeeId').textContent = employee.employeeId;
+          document.getElementById('viewName').textContent = employee.name;
+          document.getElementById('viewIsMentor').textContent = employee.isMentor;
+          document.getElementById('viewEmploymentType').textContent = employee.employmentType;
 
+          // Populate mentor assignments and tasks for viewing
+          populateMentorAssignments(employeeId);
+          populateTasks(employeeId);
           // Populate mentor assignments and tasks for viewing
           populateMentorAssignments(employeeId);
           populateTasks(employeeId);
@@ -304,7 +335,16 @@ function viewEmployee(employeeId) {
           $('#viewEmployeeModal').modal('show');
       })
       .catch(error => console.error('Error fetching employee details:', error));
+          // Show the view modal
+          $('#viewEmployeeModal').modal('show');
+      })
+      .catch(error => console.error('Error fetching employee details:', error));
 }
+window.viewEmployee = viewEmployee;
+
+// editEmployee(employeeId, formData)
+// Sends updated employee information to the server.
+// Handles the server response to confirm the update and refreshes the displayed data.
 window.viewEmployee = viewEmployee;
 
 // editEmployee(employeeId, formData)
@@ -354,6 +394,7 @@ function deleteEmployee(employeeId) {
   console.log(`Deleting employee with ID: ${employeeId}`);
   if (confirm('Are you sure you want to delete this employee, their tasks, mentor assignments, and login information?')) {
       fetch(`http://localhost:8080/newhireinfo/${employeeId}`, {
+          method: 'DELETE'
           method: 'DELETE'
       })
       .then(response => {

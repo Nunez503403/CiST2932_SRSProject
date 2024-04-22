@@ -15,7 +15,10 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -44,15 +47,22 @@ public class NewHireInfo {
     private boolean isMentor;
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.REMOVE)
     @JsonManagedReference
+    private List<MentorAssignments> assignmentsAsMentor = new ArrayList<>();
     private List<MentorAssignments> assignmentsAsMentor = new ArrayList<>();
 
     @OneToMany(mappedBy = "mentee", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "mentee", cascade = CascadeType.REMOVE)
     @JsonManagedReference
+    private List<MentorAssignments> assignmentsAsMentee = new ArrayList<>();
     private List<MentorAssignments> assignmentsAsMentee = new ArrayList<>();
 
     @OneToMany(mappedBy = "assignee", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "assignee", cascade = CascadeType.REMOVE)
     @JsonManagedReference
+    private List<PeerCodingTasks> assignedTasks = new ArrayList<>();
+
     private List<PeerCodingTasks> assignedTasks = new ArrayList<>();
 
 
@@ -142,8 +152,3 @@ public class NewHireInfo {
         return allAssignments;
     }
 
-    public void setArchived(boolean b) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setArchived'");
-    }
-}
