@@ -47,23 +47,19 @@ public class NewHireInfo {
     private boolean isMentor;
 
     @OneToMany(mappedBy = "mentor", cascade = CascadeType.REMOVE)
-    @OneToMany(mappedBy = "mentor", cascade = CascadeType.REMOVE)
     @JsonManagedReference
-    private List<MentorAssignments> assignmentsAsMentor = new ArrayList<>();
     private List<MentorAssignments> assignmentsAsMentor = new ArrayList<>();
 
     @OneToMany(mappedBy = "mentee", cascade = CascadeType.REMOVE)
-    @OneToMany(mappedBy = "mentee", cascade = CascadeType.REMOVE)
     @JsonManagedReference
-    private List<MentorAssignments> assignmentsAsMentee = new ArrayList<>();
     private List<MentorAssignments> assignmentsAsMentee = new ArrayList<>();
 
     @OneToMany(mappedBy = "assignee", cascade = CascadeType.REMOVE)
-    @OneToMany(mappedBy = "assignee", cascade = CascadeType.REMOVE)
     @JsonManagedReference
-    private List<PeerCodingTasks> assignedTasks = new ArrayList<>();
 
     private List<PeerCodingTasks> assignedTasks = new ArrayList<>();
+
+
 
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -151,4 +147,5 @@ public class NewHireInfo {
         allAssignments.addAll(assignmentsAsMentee);
         return allAssignments;
     }
+}
 

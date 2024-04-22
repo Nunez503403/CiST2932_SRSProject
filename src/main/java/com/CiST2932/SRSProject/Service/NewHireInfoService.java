@@ -242,37 +242,44 @@ if (newEmployeeDTO.getMentor() != 0) {
     }
      
     @Transactional
-    public NewHireInfo updateOrCreateEmployee(int id, NewEmployeeDTO newEmployeeDTO) {
-        // First, fetch the existing NewHireInfo or create a new one
-        NewHireInfo newHireInfo = newHireInfoRepository.findById(id).orElse(new NewHireInfo());
+    public void deleteNewHireInfoAndRelatedData(int employeeId) {
+        // Fetch NewHireInfo along with related data
+        NewHireInfo newHireInfo = newHireInfoRepository.findById(employeeId).orElse(null);
+        if (newHireInfo != null) {
+            // newHireInfo.setArchived(true);
+            newHireInfoRepository.save(newHireInfo);
+        // Delete related data first to avoid foreign key constraints
+        peerCodingTasksRepository.deleteAll(newHireInfo.getAssignedTasks());
+        mentorAssignmentsRepository.deleteAll(newHireInfo.getMentorAssignments());
+        usersRepository.deleteById(newHireInfo.getUser().getEmployeeId());
+        // Finally, delete the NewHireInfo record
+        newHireInfoRepository.deleteById(employeeId);
+    }
+}
 
-        // Update properties from DTO
-        newHireInfo.setIsMentor(newEmployeeDTO.getIsMentor());
-        newHireInfo.setEmploymentType(newEmployeeDTO.getEmploymentType());  // Assuming these are included in DTO
-        newHireInfo.setName(newEmployeeDTO.getName()); // Assume name is also updatable
-
-        // Save the NewHireInfo entity and ensure it has an ID
-        newHireInfo = newHireInfoRepository.save(newHireInfo);
-
-        // Handle the Users entity
-        Users user = usersRepository.findById(id).orElse(new Users());
-
-        // Set properties from the DTO
-        user.setNewHireInfo(newHireInfo);
-        user.setEmail(newEmployeeDTO.getEmail());
-        user.setUsername(newEmployeeDTO.getUsername());
-        user.setPasswordHash(newEmployeeDTO.getPasswordHash());
-        user.setRegistrationDate(new Timestamp(System.currentTimeMillis()));
-
-        // Link User to NewHireInfo
-        newHireInfo.setUser(user);
-
-        // Save or update the User
-        usersRepository.save(user);
-
-        return newHireInfo;
-    } 
-
-
+    public NewHireInfo updateOrCreateEmployee(int id, NewEmployeeDTO employeeDTO) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateOrCreateEmployee'");
+    }
     
+// @Transactional
+// public void archiveNewHireInfoAndRelatedData(int employeeId) {
+//     // Fetch NewHireInfo along with related data
+//     NewHireInfo newHireInfo = newHireInfoRepository.findById(employeeId).orElse(null);
+//     if (newHireInfo != null) {
+//         // Set NewHireInfo as archived
+//         newHireInfo.setArchived(true);
+//         newHireInfoRepository.save(newHireInfo);
+        
+//         // Archive related PeerCodingTasks
+//         peerCodingTasksRepository.archiveTasksByNewHireId(employeeId);
+        
+//         // Archive related MentorAssignments
+//         mentorAssignmentsRepository.archiveAssignmentsByNewHireId(employeeId);
+        
+//         // Remove the associated user record
+//         usersRepository.deleteById(newHireInfo.getUser().getEmployeeId());
+//     }
+// }
+
 }
