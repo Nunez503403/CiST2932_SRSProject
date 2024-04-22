@@ -36,7 +36,7 @@ function initializeFormDefaults() {
 // Includes listeners for form submissions and interactive elements like buttons.
 function attachEventListeners() {
   console.log("Attaching event listeners...");
-  document.getElementById('newEmployeeIsMentor').addEventListener('change', handleMentorChange);
+  // document.getElementById('newEmployeeIsMentor').addEventListener('change', handleMentorChange);
   document.getElementById('newEmployeeModal').addEventListener('submit', handleSubmitEmployee);
   document.getElementById('editEmployeeForm').addEventListener('submit', handleSubmitEmployee);
   document.getElementById('employeeTable').addEventListener('click', handleTableClick);
