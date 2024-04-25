@@ -47,12 +47,13 @@ public class NewHireInfoController {
     // }    
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNewHireInfo(@PathVariable int id) {
-        if (newHireInfoService.findById(id).isPresent()) {
-            newHireInfoService.deleteById(id);
+    public ResponseEntity<?> deleteNewHireInfo(@PathVariable int id) {
+        try {
+            newHireInfoService.deleteNewHireInfoAndRelatedData(id);
             return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete new hire info: " + e.getMessage());
         }
-        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/{mentorId}/mentees")
@@ -61,12 +62,18 @@ public class NewHireInfoController {
         return ResponseEntity.ok(mentees);
     }
 
-    @GetMapping("/mentors")
+    @GetMapping("/{menteeId}/mentor")
+    public ResponseEntity<List<NewHireInfo>> getMentorByMenteeId(@PathVariable int menteeId) {
+        List<NewHireInfo> mentor = newHireInfoService.findMentorByMenteeId(menteeId);
+        return ResponseEntity.ok(mentor);
+    }
+
+    @GetMapping("/fetchMentors")
     public ResponseEntity<List<NewHireInfo>> getAllMentors() {
         List<NewHireInfo> mentors = newHireInfoService.findAllMentors();
         return ResponseEntity.ok(mentors);
     }
-    @GetMapping("/unassigned-mentees")
+    @GetMapping("/fetchMentees")
     public ResponseEntity<List<NewHireInfo>> getUnassignedMentees() {
         List<NewHireInfo> unassignedMentees = newHireInfoService.findUnassignedMentees();
         if (unassignedMentees.isEmpty()) {
@@ -86,9 +93,9 @@ public class NewHireInfoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newHireInfo);
     }
     @PutMapping("/{id}")
-    public ResponseEntity<NewHireInfo> updateOrCreateEmployee(@PathVariable int id, @RequestBody NewEmployeeDTO employeeDTO) {
+    public ResponseEntity<NewHireInfo> updateOrCreateEmployee(@PathVariable int id, @RequestBody NewEmployeeDTO newEmployeeDTO) {
         try {
-            NewHireInfo updatedInfo = newHireInfoService.updateOrCreateEmployee(id, employeeDTO);
+            NewHireInfo updatedInfo = newHireInfoService.updateOrCreateEmployee(id, newEmployeeDTO);
             return ResponseEntity.ok(updatedInfo);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

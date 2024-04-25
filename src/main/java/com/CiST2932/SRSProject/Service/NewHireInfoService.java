@@ -2,12 +2,15 @@
 
 package com.CiST2932.SRSProject.Service;
 
+import com.CiST2932.SRSProject.Domain.MentorAssignments;
 import com.CiST2932.SRSProject.Domain.NewEmployeeDTO;
 import com.CiST2932.SRSProject.Domain.NewHireInfo;
 import com.CiST2932.SRSProject.Domain.NewHireInfoDTO;
 import com.CiST2932.SRSProject.Domain.Users;
 import com.CiST2932.SRSProject.Repository.NewHireInfoRepository;
+import com.CiST2932.SRSProject.Repository.PeerCodingTasksRepository;
 import com.CiST2932.SRSProject.Repository.UsersRepository;
+import com.CiST2932.SRSProject.Repository.MentorAssignmentsRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,6 +29,10 @@ public class NewHireInfoService {
     private NewHireInfoRepository newHireInfoRepository;
     @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    private MentorAssignmentsRepository mentorAssignmentsRepository;
+    @Autowired
+    private PeerCodingTasksRepository peerCodingTasksRepository;
     @Autowired
     private ModelMapper modelMapper;
 
@@ -48,6 +55,10 @@ public class NewHireInfoService {
 
     public List<NewHireInfo> findMenteesByMentorId(int mentorId) {
         return newHireInfoRepository.findMenteesByMentorId(mentorId);
+    }
+
+    public List<NewHireInfo> findMentorByMenteeId(int menteeId) {
+        return newHireInfoRepository.findMentorByMenteeId(menteeId);
     }
 
     public List<NewHireInfo> findUnassignedMentees() {
@@ -75,89 +86,177 @@ public class NewHireInfoService {
         return newHireInfoRepository.findAllNames();
     }
 
+    @Transactional
     public NewHireInfo createNewHireInfo(NewEmployeeDTO newEmployeeDTO) {
         NewHireInfo newHireInfo = new NewHireInfo();
+        // Set basic properties
         newHireInfo.setName(newEmployeeDTO.getName());
         newHireInfo.setIsMentor(newEmployeeDTO.getIsMentor());
         newHireInfo.setEmploymentType(newEmployeeDTO.getEmploymentType());
         newHireInfo.setEmployeeId(newEmployeeDTO.getEmployeeId());
-
-        // Save the newHireInfo
-        newHireInfo = newHireInfoRepository.save(newHireInfo);
-
+        
+        // Save to get the generated ID
+        NewHireInfo savedNewHireInfo = newHireInfoRepository.save(newHireInfo);
+        
         // Print out the newHireInfo employeeId
         System.out.println("Employee ID: " + newHireInfo.getEmployeeId());
 
-
-        // If username and password are provided, create the Users object first
-        if (newEmployeeDTO.getUsername() != null && newEmployeeDTO.getPasswordHash() != null) {
+        // Handle Users creation
+        if (newEmployeeDTO.getUsername() != null) {
             Users user = new Users();
-            // Set the EmployeeID from NewHireInfo
-            user. setNewHireInfo(newHireInfo);
-            user.setEmail(newEmployeeDTO.getEmail());
+            user.setNewHireInfo(savedNewHireInfo);
             user.setUsername(newEmployeeDTO.getUsername());
-            user.setPasswordHash(newEmployeeDTO.getPasswordHash()); // Consider using a hashed password
+            user.setPasswordHash(newEmployeeDTO.getPasswordHash());
+            user.setEmail(newEmployeeDTO.getEmail());
             user.setRegistrationDate(new Timestamp(System.currentTimeMillis()));
-
-        // Link User with NewHireInfo
-        user.setNewHireInfo(newHireInfo);
-        newHireInfo.setUser(user);
-
-        // Save the Users entity, it should now have the correct employeeId
-        usersRepository.save(user);
-
+            savedNewHireInfo.setUser(user);
+            usersRepository.save(user);
         }
-
-        // print out the username
-        System.out.println("Username: " + newEmployeeDTO.getUsername());
-        // refresh the newHireInfo
-        newHireInfo = newHireInfoRepository.findById(newHireInfo.getEmployeeId()).get();
-        System.out.println("Employee ID: " + newHireInfo.getEmployeeId());
-
     
-        // Save the NewHireInfo entity, cascade should save Users too
-        return newHireInfoRepository.save(newHireInfo);
+// // Handle mentor or mentee assignment
+    if (newEmployeeDTO.getIsMentor()) {
+        // This new employee is a mentor; we should add mentees.
+        // Assuming mentees IDs are passed in some form, like a list in NewEmployeeDTO.
+        for (Integer menteeId : newEmployeeDTO.getMenteeIds()) {
+            assignMentee(savedNewHireInfo, menteeId);
+        }
+    } else {
+        // This new employee is a mentee; assign a mentor to them.
+        assignMentor(savedNewHireInfo, newEmployeeDTO.getMentorId());
     }
+
+    return savedNewHireInfo;
+
+// Handle mentorship assignment
+// if (newEmployeeDTO.getMentor() != 0) {
+//     MentorAssignments mentorAssignment = new MentorAssignments();
+//     NewHireInfo mentor = newHireInfoRepository.findById(newEmployeeDTO.getMentor()).orElse(null);
+//     mentorAssignment.setMentor(mentor);
+//     mentorAssignment.setMentee(savedNewHireInfo);
+  
+//     if (mentor != null) {
+//         mentorAssignment.setMentor(mentor);
+//         mentorAssignment.setMentee(savedNewHireInfo);
+//         mentorAssignmentsRepository.save(mentorAssignment);
+//         System.out.println("Handle mentorship assignment'Mentor Assignment Saved: Mentor ID - " + mentor.getEmployeeId() + " Mentee ID - " + savedNewHireInfo.getEmployeeId());
+//     } else {
+//         System.out.println("Mentor ID not found: " + newEmployeeDTO.getMentor());
+//     }
+    
+  
+//     // Save the mentorship assignment
+//     mentorAssignmentsRepository.save(mentorAssignment);
+//   }
+  
+    // print out the username
+    System.out.println("Username: " + newEmployeeDTO.getUsername());
+    // refresh the newHireInfo
+    newHireInfo = newHireInfoRepository.findById(newHireInfo.getEmployeeId()).get();
+    System.out.println("Employee ID: " + newHireInfo.getEmployeeId());
+  
+    // Save the NewHireInfo entity, cascade should save Users too
+    return newHireInfoRepository.save(newHireInfo);
+    
+  }
+
+  private void assignMentee(NewHireInfo mentor, Integer menteeId) {
+    NewHireInfo mentee = newHireInfoRepository.findById(menteeId).orElseThrow(() -> new RuntimeException("Mentee not found"));
+    MentorAssignments assignment = new MentorAssignments(mentor, mentee);
+    mentorAssignmentsRepository.save(assignment);
+}
+
+private void assignMentor(NewHireInfo mentee, Integer mentorId) {
+    NewHireInfo mentor = newHireInfoRepository.findById(mentorId).orElseThrow(() -> new RuntimeException("Mentor not found"));
+    MentorAssignments assignment = new MentorAssignments(mentor, mentee);
+    mentorAssignmentsRepository.save(assignment);
+}
         
+    @Transactional
+    public NewHireInfo updateOrCreateEmployee(NewEmployeeDTO newEmployeeDTO) {
+        NewHireInfo newHireInfo = newHireInfoRepository.findById(newEmployeeDTO.getEmployeeId())
+                                        .orElse(new NewHireInfo());
+    
+        newHireInfo.setName(newEmployeeDTO.getName());
+        newHireInfo.setIsMentor(newEmployeeDTO.getIsMentor());
+        newHireInfo.setEmploymentType(newEmployeeDTO.getEmploymentType());
+    
+        if (newEmployeeDTO.getUsername() != null && newEmployeeDTO.getPasswordHash() != null) {
+            Users user = Optional.ofNullable(newHireInfo.getUser()).orElse(new Users());
+            user.setNewHireInfo(newHireInfo);
+            user.setUsername(newEmployeeDTO.getUsername());
+            user.setPasswordHash(newEmployeeDTO.getPasswordHash());
+            user.setEmail(newEmployeeDTO.getEmail());
+            user.setRegistrationDate(new Timestamp(System.currentTimeMillis()));
+            newHireInfo.setUser(user);
+            usersRepository.save(user);
+        }
+    
+        if (newEmployeeDTO.getMentor() != 0) {
+            MentorAssignments mentorAssignment = new MentorAssignments();
+            NewHireInfo mentor = newHireInfoRepository.findById(newEmployeeDTO.getMentor()).orElse(null);
+            if (mentor != null) {
+                if (newHireInfo.getIsMentor()) {
+                    mentorAssignment.setMentor(newHireInfo);
+                    mentorAssignment.setMentee(mentor);
+                } else {
+                    mentorAssignment.setMentor(mentor);
+                    mentorAssignment.setMentee(newHireInfo);
+                }
+                mentorAssignmentsRepository.save(mentorAssignment);
+            } else {
+                System.out.println("Mentor ID not found: " + newEmployeeDTO.getMentor());
+            }
+        }
+    
+        NewHireInfo savedNewHireInfo = newHireInfoRepository.save(newHireInfo);
+        System.out.println("Saved or updated New Hire Info: " + savedNewHireInfo);
+        return savedNewHireInfo;
+    }
+    
+    private void handleMentorOrMenteeAssignment(NewHireInfo newHireInfo, NewEmployeeDTO newEmployeeDTO) {
+        Optional<NewHireInfo> mentorOrMenteeOpt = newHireInfoRepository.findById(newEmployeeDTO.getMentorOrMenteeId());
+        if (mentorOrMenteeOpt.isPresent()) {
+            MentorAssignments mentorAssignment = new MentorAssignments();
+            NewHireInfo mentorOrMentee = mentorOrMenteeOpt.get();
+            mentorAssignment.setMentor(newHireInfo.getIsMentor() ? newHireInfo : mentorOrMentee);
+            mentorAssignment.setMentee(newHireInfo.getIsMentor() ? mentorOrMentee : newHireInfo);
+    
+            // Log the assignment details before saving
+            System.out.println("Creating Mentor Assignment: " + mentorAssignment);
+    
+            mentorAssignmentsRepository.save(mentorAssignment);
+            System.out.println("Mentor Assignment Saved: " + mentorAssignment);
+        } else {
+            System.out.println("Mentor/Mentee ID not found: " + newEmployeeDTO.getMentorOrMenteeId());
+        }
+    }
+     
     public NewHireInfo updateEmployee(int id, NewEmployeeDTO newEmployeeDTO) {
         NewHireInfo employee = newHireInfoRepository.findById(id)
                 .orElseThrow(() -> new ResourceAccessException("Employee not found with id " + id));
         modelMapper.map(newEmployeeDTO, employee);
         return newHireInfoRepository.save(employee);
     }
-    
+     
     @Transactional
-    public NewHireInfo updateOrCreateEmployee(int id, NewEmployeeDTO newEmployeeDTO) {
-        // First, fetch the existing NewHireInfo or create a new one
-        NewHireInfo newHireInfo = newHireInfoRepository.findById(id).orElse(new NewHireInfo());
+    public void deleteNewHireInfoAndRelatedData(int employeeId) {
+        // Fetch NewHireInfo along with related data
+        NewHireInfo newHireInfo = newHireInfoRepository.findById(employeeId).orElse(null);
+        if (newHireInfo != null) {
+            // newHireInfo.setArchived(true);
+            newHireInfoRepository.save(newHireInfo);
+        // Delete related data first to avoid foreign key constraints
+        peerCodingTasksRepository.deleteAll(newHireInfo.getAssignedTasks());
+        mentorAssignmentsRepository.deleteAll(newHireInfo.getMentorAssignments());
+        usersRepository.deleteById(newHireInfo.getUser().getEmployeeId());
+        // Finally, delete the NewHireInfo record
+        newHireInfoRepository.deleteById(employeeId);
+    }
+}
 
-        // Update properties from DTO
-        newHireInfo.setIsMentor(newEmployeeDTO.getIsMentor());
-        newHireInfo.setEmploymentType(newEmployeeDTO.getEmploymentType());  // Assuming these are included in DTO
-        newHireInfo.setName(newEmployeeDTO.getName()); // Assume name is also updatable
+    public NewHireInfo updateOrCreateEmployee(int id, NewEmployeeDTO employeeDTO) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateOrCreateEmployee'");
+    }
 
-        // Save the NewHireInfo entity and ensure it has an ID
-        newHireInfo = newHireInfoRepository.save(newHireInfo);
-
-        // Handle the Users entity
-        Users user = usersRepository.findById(id).orElse(new Users());
-
-        // Set properties from the DTO
-        user.setNewHireInfo(newHireInfo);
-        user.setEmail(newEmployeeDTO.getEmail());
-        user.setUsername(newEmployeeDTO.getUsername());
-        user.setPasswordHash(newEmployeeDTO.getPasswordHash());
-        user.setRegistrationDate(new Timestamp(System.currentTimeMillis()));
-
-        // Link User to NewHireInfo
-        newHireInfo.setUser(user);
-
-        // Save or update the User
-        usersRepository.save(user);
-
-        return newHireInfo;
-    } 
-
-
-    
 }
