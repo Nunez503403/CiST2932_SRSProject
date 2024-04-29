@@ -259,8 +259,6 @@ public NewEmployeeDTO getEmployeeDetails(int employeeId) {
         }
 
         public List<NewHireInfo> findAllNewHireInfoWithDetails() {
-            System.out.println("Fetching all NewHireInfo with details");
             return newHireInfoRepository.findAllNewHireInfoWithDetails();
         }
-
     }

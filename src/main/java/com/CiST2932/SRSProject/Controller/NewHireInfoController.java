@@ -22,14 +22,24 @@ public class NewHireInfoController {
     @Autowired
     private NewHireInfoService newHireInfoService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> findAllNewHireInfoWithDetails(@PathVariable int id) {
-    Optional<NewHireInfo> newHireInfo = newHireInfoService.findById(id);
-    if (newHireInfo.isPresent()) {
+    @GetMapping
+    public ResponseEntity<List<NewHireInfo>> findAll() {
+        List<NewHireInfo> newHireInfo = newHireInfoService.findAll();
         return ResponseEntity.ok(newHireInfo);
     }
-    return ResponseEntity.notFound().build();
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> findAllNewHireInfoWithDetails(@PathVariable int id) {
+        Optional<NewHireInfo> newHireInfo = newHireInfoService.findById(id);
+        if (newHireInfo.isPresent() && newHireInfo.get().getDeveloper() != null) {
+            return ResponseEntity.ok(newHireInfo);
+        } else {
+            // Handle the case where the associated user record is missing
+            return ResponseEntity.notFound().build();
+        }
     }
+    
+    
     
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteNewHireInfo(@PathVariable int id) {
