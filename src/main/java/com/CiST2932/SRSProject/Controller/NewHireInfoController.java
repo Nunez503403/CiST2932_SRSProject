@@ -59,6 +59,13 @@ public class NewHireInfoController {
         List<NewHireInfo> mentors = newHireInfoService.findAllMentors();
         return ResponseEntity.ok(mentors);
     }
+
+    @GetMapping
+    public ResponseEntity<List<NewHireInfo>> findAll() {
+        List<NewHireInfo> newHireInfo = newHireInfoService.findAll();
+        return ResponseEntity.ok(newHireInfo);
+    }
+
     // fetch list of unassigned mentees
     @GetMapping("/fetchMentees")
     public ResponseEntity<List<NewHireInfo>> getUnassignedMentees() {
@@ -86,7 +93,4 @@ public class NewHireInfoController {
         NewHireInfo newHireInfo = newHireInfoService.updateOrCreateEmployee(id, newEmployeeDTO);
         return ResponseEntity.ok(newHireInfo);
     }
-
-
-
 }

@@ -257,4 +257,10 @@ public NewEmployeeDTO getEmployeeDetails(int employeeId) {
         dto.setAssigneeName(task.getAssignee().getName()); // Assuming Task has a reference to Assignee which is an Employee
         return dto;
         }
+
+        public List<NewHireInfo> findAllNewHireInfoWithDetails() {
+            System.out.println("Fetching all NewHireInfo with details");
+            return newHireInfoRepository.findAllNewHireInfoWithDetails();
+        }
+
     }
